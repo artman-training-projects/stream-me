@@ -2,7 +2,7 @@ import {
   Resolver,
   Query,
   Mutation,
-  Field,
+  FieldResolver,
   Ctx,
   Arg,
   Root,
@@ -45,5 +45,58 @@ export class StreamResolver {
 
     await stream.save();
     return stream;
+  }
+
+  @Mutation(() => Stream)
+  @UseMiddleware(isAuth)
+  async editStream(
+    @Arg("input") streamInput: StreamInput,
+    @Ctx() ctx: MyContext
+  ): Promise<Stream> {
+    const { id, title, description, url } = streamInput;
+    const stream = await StreamModel.findOneAndUpdate(
+      {
+        _id: id,
+        author: ctx.res.locals.userId,
+      },
+      {
+        title,
+        description,
+        url,
+      },
+      {
+        runValidators: true,
+        new: true,
+      }
+    );
+
+    if (!stream) {
+      throw new Error("Stream not found");
+    }
+
+    return stream;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async deleteStream(
+    @Arg("streamId", () => ObjectIdScalar) streamId: ObjectID,
+    @Ctx() ctx: MyContext
+  ): Promise<Boolean | undefined> {
+    const deleted = await StreamModel.findByIdAndDelete({
+      _id: streamId,
+      author: ctx.res.locals.userId,
+    });
+
+    if (!deleted) {
+      throw new Error("Stream not found");
+    }
+
+    return true;
+  }
+
+  @FieldResolver()
+  async author(@Root() stream: Stream): Promise<User | null> {
+    return await UserModel.findById(stream.author);
   }
 }
