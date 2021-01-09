@@ -8,7 +8,7 @@ import {
   Root,
   UseMiddleware,
 } from "type-graphql";
-import { ObjectID } from "mongodb";
+import { ObjectId } from "mongodb";
 import { MyContext } from "../types/MyContext";
 import { User, UserModel } from "../entity/User";
 import { Stream, StreamModel } from "../entity/Stream";
@@ -19,15 +19,15 @@ import { isAuth } from "../middleware/isAuth";
 @Resolver(() => Stream)
 export class StreamResolver {
   @Query(() => Stream, { nullable: true })
-  stream(@Arg("streamId", () => ObjectIdScalar) streamId: ObjectID) {
-    // Find a single string
+  stream(@Arg("streamId", () => ObjectIdScalar) streamId: ObjectId) {
+    // find a single stream
     return StreamModel.findById(streamId);
   }
 
   @Query(() => [Stream])
   @UseMiddleware(isAuth)
   streams(@Ctx() ctx: MyContext) {
-    // Display all streams for the current user
+    // display all streams for the current user
     return StreamModel.find({ author: ctx.res.locals.userId });
   }
 
@@ -37,13 +37,14 @@ export class StreamResolver {
     @Arg("input") streamInput: StreamInput,
     @Ctx() ctx: MyContext
   ): Promise<Stream> {
-    // Create a new user stream
+    // create a new user's stream
     const stream = new StreamModel({
       ...streamInput,
       author: ctx.res.locals.userId,
     } as Stream);
 
     await stream.save();
+
     return stream;
   }
 
@@ -55,43 +56,33 @@ export class StreamResolver {
   ): Promise<Stream> {
     const { id, title, description, url } = streamInput;
     const stream = await StreamModel.findOneAndUpdate(
-      {
-        _id: id,
-        author: ctx.res.locals.userId,
-      },
+      { _id: id, author: ctx.res.locals.userId },
       {
         title,
         description,
         url,
       },
-      {
-        runValidators: true,
-        new: true,
-      }
+      { runValidators: true, new: true }
     );
-
     if (!stream) {
       throw new Error("Stream not found");
     }
-
     return stream;
   }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async deleteStream(
-    @Arg("streamId", () => ObjectIdScalar) streamId: ObjectID,
+    @Arg("streamId", () => ObjectIdScalar) streamId: ObjectId,
     @Ctx() ctx: MyContext
   ): Promise<Boolean | undefined> {
-    const deleted = await StreamModel.findByIdAndDelete({
+    const deleted = await StreamModel.findOneAndDelete({
       _id: streamId,
       author: ctx.res.locals.userId,
     });
-
     if (!deleted) {
       throw new Error("Stream not found");
     }
-
     return true;
   }
 

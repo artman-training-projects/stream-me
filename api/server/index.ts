@@ -13,7 +13,6 @@ async function createServer() {
   try {
     // create mongoose connection
     await createSession();
-
     // create express server
     const app = express();
 
@@ -34,7 +33,6 @@ async function createServer() {
       schema,
       context: ({ req, res }) => ({ req, res }),
       introspection: true,
-
       // enable GraphQL Playground with credentials
       playground: {
         settings: {

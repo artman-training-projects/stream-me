@@ -1,27 +1,58 @@
 import { Arg, Mutation, Resolver } from "type-graphql";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+
 import { UserModel } from "../entity/User";
 import { AuthInput } from "../types/AuthInput";
-import { UserResponce } from "../types/UserResponce";
+import { UserResponse } from "../types/UserResponse";
 
 @Resolver()
 export class AuthResolver {
-  @Mutation(() => UserResponce)
+  @Mutation(() => UserResponse)
   async register(
-    @Arg("input") { email, password }: AuthInput
-  ): Promise<UserResponce> {
-    // Check for an existing email
+    @Arg("input")
+    { email, password }: AuthInput
+  ): Promise<UserResponse> {
+    // check for existing user email
     const existingUser = await UserModel.findOne({ email });
 
     if (existingUser) {
       throw new Error("Email already in use");
     }
 
-    // Create a new user with a hashed password
+    // create new user with hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new UserModel({ email, password: hashedPassword });
     await user.save();
+
+    // store user id on the token payload
+    const payload = {
+      id: user.id,
+    };
+
+    const token = jwt.sign(
+      payload,
+      process.env.SESSION_SECRET || "aslkdfjoiq12312"
+    );
+
+    return { user, token };
+  }
+
+  @Mutation(() => UserResponse)
+  async login(
+    @Arg("input") { email, password }: AuthInput
+  ): Promise<UserResponse> {
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      throw new Error("Invalid login");
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+
+    if (!valid) {
+      throw new Error("Invalid login");
+    }
 
     // Store user id on the token payload
     const payload = {
@@ -30,40 +61,9 @@ export class AuthResolver {
 
     const token = jwt.sign(
       payload,
-      process.env.SESSION_SECRET || "bla-bla-bla"
+      process.env.SESSION_SECRET || "aslkdfjoiq12312"
     );
 
     return { user, token };
-  }
-
-  @Mutation(() => UserResponce)
-  async login(
-    @Arg("input") { email, password }: AuthInput
-  ): Promise<UserResponce> {
-    // Check for an existing email
-    const existingUser = await UserModel.findOne({ email });
-
-    if (!existingUser) {
-      throw new Error("Invalid login");
-    }
-
-    // Check if the passsword is valid
-    const valid = await bcrypt.compare(password, existingUser.password);
-
-    if (!valid) {
-      throw new Error("Invalid login");
-    }
-
-    // Store user id on the token payload
-    const payload = {
-      id: existingUser.id,
-    };
-
-    const token = jwt.sign(
-      payload,
-      process.env.SESSION_SECRET || "bla-bla-bla"
-    );
-
-    return { user: existingUser, token };
   }
 }

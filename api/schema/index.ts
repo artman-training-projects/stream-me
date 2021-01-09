@@ -1,7 +1,7 @@
-import path from "path";
 import { GraphQLSchema } from "graphql";
 import { buildSchema } from "type-graphql";
-import { ObjectID } from "mongodb";
+import { ObjectId } from "mongodb";
+import path from "path";
 
 import { UserResolver } from "../resolvers/UserResolver";
 import { AuthResolver } from "../resolvers/AuthResolver";
@@ -12,7 +12,7 @@ import { TypegooseMiddleware } from "../middleware/typegoose";
 // build TypeGraphQL executable schema
 export default async function createSchema(): Promise<GraphQLSchema> {
   const schema = await buildSchema({
-    // add all typesscript resolvers
+    // add all typescript resolvers
     resolvers: [UserResolver, AuthResolver, StreamResolver],
     emitSchemaFile: path.resolve(__dirname, "schema.gql"),
 
@@ -20,9 +20,8 @@ export default async function createSchema(): Promise<GraphQLSchema> {
     globalMiddlewares: [TypegooseMiddleware],
 
     // use ObjectId scalar mapping
-    scalarsMap: [{ type: ObjectID, scalar: ObjectIdScalar }],
+    scalarsMap: [{ type: ObjectId, scalar: ObjectIdScalar }],
     validate: false,
   });
-
   return schema;
 }
