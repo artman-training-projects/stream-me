@@ -8,10 +8,10 @@ export default async function createSession() {
   }
 
   const options = {
-    useNewUrlParse: true,
+    useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
-    useUnifiedopology: true,
+    useUnifiedTopology: true,
   };
 
   await connect(MONGO_URL, options);
