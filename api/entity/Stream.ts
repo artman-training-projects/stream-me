@@ -1,13 +1,13 @@
 import { prop as Property, getModelForClass } from "@typegoose/typegoose";
-import { ObjectID } from "mongodb";
+import { ObjectId } from "mongodb";
 import { Field, ObjectType } from "type-graphql";
 import { User } from "./User";
 import { Ref } from "../types/Ref";
 
-@ObjectType({ description: "Stream embedded post content" })
+@ObjectType()
 export class Stream {
   @Field()
-  readonly _id: ObjectID;
+  readonly _id: ObjectId;
 
   @Field()
   @Property({ required: true })
