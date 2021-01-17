@@ -7,7 +7,10 @@ import cors from "cors";
 import createSchema from "../schema";
 import createSession from "../session";
 
+import nextApp from "@stream-me/app";
+
 const port = process.env.PORT || 8000;
+const handleRequest = nextApp.getRequestHandler();
 
 async function createServer() {
   try {
@@ -18,9 +21,9 @@ async function createServer() {
 
     // allow CORS from client app
     const corsOptions = {
-      origin: "http://localhost:3000",
       credentials: true,
     };
+
     app.use(cors(corsOptions));
 
     // allow JSON requests
@@ -42,6 +45,11 @@ async function createServer() {
     });
 
     apolloServer.applyMiddleware({ app, cors: corsOptions });
+
+    // create next app request handler
+    // prepare the next app
+    await nextApp.prepare();
+    app.get("*", (req, res) => handleRequest(req, res));
 
     // start the server
     app.listen({ port }, () => {
