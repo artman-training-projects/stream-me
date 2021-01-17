@@ -1,4 +1,4 @@
-// import React from "react";
+import React from "react";
 import { makeStyles, Theme } from "@material-ui/core/styles";
 import {
   AppBar,
@@ -22,11 +22,13 @@ export default function Header({ darkState, handleThemeChange }) {
     user && { label: "Sign Out", href: "/auth/signout" },
   ]
     .filter((link) => link)
-    .map(({ label, href }) => (
-      <Link key={href} href={href}>
-        <Button color="inherit">{label}</Button>
-      </Link>
-    ));
+    .map(({ label, href }) => {
+      return (
+        <Link href={href} key={href}>
+          <Button color="inherit">{label}</Button>
+        </Link>
+      );
+    });
 
   return (
     <div className={classes.root}>
